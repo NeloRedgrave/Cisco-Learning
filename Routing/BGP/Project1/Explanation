@@ -1,1 +1,85 @@
+Step by step:
+    1. CONFIGURE IP ADDRESS EACH DEVICE
+  --> AS 20:
+-> PC0:
+FastEthernet0: 192.168.100.10
+Subnet Mask: 255.255.255.0 ( for prefix 24 )
+Default Gateway: 192.168.100.1
+-> PC1:
+FastEthernet0: 192.168.100.20
+Subnet Mask: 255.255.255.0
+Default Gateway: 192.168.100.1
 
+-> Cisco 2911:
+GigabitEthernet0/0: 10.10.10.2
+Subnet Mask: 255.255.255.252 ( for prefix 30 )
+GigabitEthernet0/1: 192.168.100.1
+Subnet Mask: 255.255.255.0
+
+  --> AS 25
+-> Cisco 2911:
+GigabitEthernet0/0: 10.10.10.1
+Subnet Mask: 255.255.255.252
+GigabitEthernet0/1: 20.20.20.1
+Subnet Mask: 255.255.255.252
+
+  --> AS 30
+-> PC0:
+FastEthernet0: 192.168.200.10
+Subnet Mask: 255.255.255.0
+Default Gateway: 192.168.200.1
+-> PC1:
+FastEthernet0: 192.168.200.20
+Subnet Mask: 255.255.255.0
+Default Gateway: 192.168.200.1
+
+-> Cisco 2911:
+GigabitEthernet0/0: 20.20.20.2
+Subnet Mask: 255.255.255.252
+GigabitEthernet0/1: 192.168.200.1
+Subnet Mask: 255.255.255.0
+
+
+    2. BGP ROUTING CONFIGURATION
+  --> AS 20
+-> Cisco 2911:
+1. conf
+2. router bgp 20 ( Match the Autonomus System Number )
+3. bgp router-id 1.1.1.1 ( whatever you like to put )
+4. neighbor 10.10.10.1 remote-as 25 ( to AS 25 with IP 10.10.10.1 )
+5. network 10.10.10.0 mask 255.255.255.252
+6. network 192.168.100.0 mask 255.255.255.0
+7. exit
+8. do wr
+9. end
+
+  --> AS 30
+-> Cisco 2911:
+1. conf
+2. router bgp 30 
+3. bgp router-id 3.3.3.3
+4. neighbor 20.20.20.1 remote-as 25
+5. network 20.20.20.0 mask 255.255.255.252
+6. network 192.168.200.0 mask 255.255.255.0
+7. exit
+8. do wr
+9. end
+
+  --> AS 25
+-> Cisco 2911:
+1. conf
+2. router bgp 25 
+3. bgp router-id 2.2.2.2
+4. neighbor 10.10.10.2 remote-as 20
+5. neighbor 20.20.20.2 remote-as 30
+5. network 20.20.20.0 mask 255.255.255.252
+6. network 10.10.10.0 mask 255.255.255.252
+7. exit
+8. do wr
+9. end
+
+
+    3. TESTING
+This configuration is considered complete when it meets the following criteria:
+> PC0 & PC1 from AS 20 can ping PC2 & PC3 from AS 30
+> PC2 & PC3 from AS 30 can ping PC0 & PC1 from AS 20
